@@ -1,7 +1,7 @@
 // ============================================================
 // CONFIG — API base URL (ajuste para seu servidor)
 // ============================================================
-const API = 'http://localhost:3001/api';
+const API = 'https://neonrush-cl1a.onrender.com/api';
 
 // ============================================================
 // AUTH STATE
@@ -798,15 +798,22 @@ function getUpgrades() {
 }
 
 // ── Shop ──────────────────────────────────────────────────────
+let _shopFromPause = false;
 function openShop() {
+  _shopFromPause = document.getElementById('pauseScreen').classList.contains('active');
   G.paused = true;
+  document.getElementById('pauseScreen').classList.remove('active');
   document.getElementById('shopCoinsDisplay').textContent = G.playerCoins;
   buildShopGrid();
   document.getElementById('shopScreen').classList.add('active');
 }
 function closeShop() {
   document.getElementById('shopScreen').classList.remove('active');
-  if (G.running) G.paused = false;
+  if (_shopFromPause) {
+    document.getElementById('pauseScreen').classList.add('active');
+  } else if (G.running) {
+    G.paused = false;
+  }
 }
 function buildShopGrid() {
   const grid = document.getElementById('shopGrid');

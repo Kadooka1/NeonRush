@@ -447,7 +447,7 @@ body::before{
 #shopScreen{
   overflow-y:auto;padding:20px 12px;
   justify-content:flex-start; /* evita cortar o topo quando conteúdo ultrapassa a altura */
-  align-items:center;
+  align-items:center;z-index:510;
 }
 .shop-header{
   display:flex;align-items:center;justify-content:space-between;
