@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Neon Rush Incremental v2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════════════ -->
+<div id="authScreen">
+  <canvas id="authParticles"></canvas>
+  <div class="auth-container">
+    <div class="auth-logo">
+      <div class="auth-logo-text">NEON RUSH</div>
+      <div class="auth-logo-sub">INCREMENTAL</div>
+      <div class="auth-logo-tag">Arena Survival v2.0</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">LOGIN</button>
+      <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">CADASTRAR</button>
+      <button class="auth-tab" id="tabGuest" onclick="playAsGuest()">VISITANTE</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-form active" id="formLogin">
+      <div class="field-group">
+        <label class="field-label">USUÁRIO / EMAIL</label>
+        <input type="text" class="field-input" id="loginUsername" placeholder="seu_nick ou email@ex.com" autocomplete="username">
+        <div class="field-error" id="loginUsernameErr"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">SENHA</label>
+        <div class="field-password">
+          <input type="password" class="field-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          <button class="eye-btn" onclick="togglePass('loginPassword',this)">👁</button>
+        </div>
+        <div class="field-error" id="loginPasswordErr"></div>
+      </div>
+      <div class="field-error global" id="loginGlobalErr"></div>
+      <button class="auth-btn primary" id="btnLogin" onclick="doLogin()"><span>▶ ENTRAR</span></button>
+      <button class="auth-btn ghost" onclick="playAsGuest()">Continuar sem conta</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-form" id="formRegister">
+      <div class="field-group">
+        <label class="field-label">NOME DE USUÁRIO</label>
+        <input type="text" class="field-input" id="regUsername" placeholder="seu_nick_aqui" oninput="validateField('regUsername')" autocomplete="username">
+        <div class="field-hint">3-20 chars · letras, números, _</div>
+        <div class="field-error" id="regUsernameErr"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">EMAIL</label>
+        <input type="email" class="field-input" id="regEmail" placeholder="email@exemplo.com" oninput="validateField('regEmail')" autocomplete="email">
+        <div class="field-error" id="regEmailErr"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">SENHA</label>
+        <div class="field-password">
+          <input type="password" class="field-input" id="regPassword" placeholder="Mín. 6: A-Z a-z 0-9" oninput="validateField('regPassword')" autocomplete="new-password">
+          <button class="eye-btn" onclick="togglePass('regPassword',this)">👁</button>
+        </div>
+        <div class="password-strength"><div class="pw-bar" id="pwBar"></div></div>
+        <div class="field-hint">1 maiúscula · 1 minúscula · 1 número · mín. 6 chars</div>
+        <div class="field-error" id="regPasswordErr"></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">CONFIRMAR SENHA</label>
+        <div class="field-password">
+          <input type="password" class="field-input" id="regConfirm" placeholder="Repita a senha" oninput="validateField('regConfirm')" autocomplete="new-password">
+          <button class="eye-btn" onclick="togglePass('regConfirm',this)">👁</button>
+        </div>
+        <div class="field-error" id="regConfirmErr"></div>
+      </div>
+      <div class="field-error global" id="regGlobalErr"></div>
+      <button class="auth-btn primary" id="btnRegister" onclick="doRegister()"><span>✦ CRIAR CONTA</span></button>
+    </div>
+
+    <div class="news-ticker">
+      <span class="news-label">📡 NEWS</span>
+      <div class="news-scroll" id="newsTicker">Carregando notícias...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     GAME WRAPPER
+══════════════════════════════════════════════ -->
+<div id="gameWrapper" style="display:none">
+  <!-- HUD TOP -->
+  <div id="hud">
+    <div class="hud-block hud-level">
+      <div class="hud-label">NÍVEL</div>
+      <div class="hud-value" id="lvlVal">1</div>
+    </div>
+    <div class="bar-container">
+      <div class="bar-row">
+        <span class="bar-label bar-label-hp">❤ HP</span>
+        <div class="bar-track"><div class="bar-fill bar-hp" id="barHp" style="width:100%"></div></div>
+        <span class="bar-val" id="hpVal">100/100</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label bar-label-xp">⭐ XP</span>
+        <div class="bar-track"><div class="bar-fill bar-xp" id="barXp" style="width:0%"></div></div>
+        <span class="bar-val" id="xpVal">0/100</span>
+      </div>
+    </div>
+    <div class="hud-block hud-score">
+      <div class="hud-label">PONTOS</div>
+      <div class="hud-value" id="scoreVal">0</div>
+    </div>
+    <div class="hud-block hud-coins">
+      <div class="hud-label">💰 MOEDAS</div>
+      <div class="hud-value" id="coinsVal">0</div>
+    </div>
+    <div id="comboDisplay" style="display:none">x0</div>
+    <div class="hud-block hud-user">
+      <div class="hud-label">👤 JOGADOR</div>
+      <div class="hud-value hud-username" id="hudUsername">-</div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- BOSS HP BAR -->
+  <div id="bossHudBar">
+    <div class="boss-hud-label" id="bossHudName">BOSS</div>
+    <div class="boss-hud-track"><div class="boss-hud-fill" id="bossHudFill" style="width:100%"></div></div>
+    <div class="boss-hud-val" id="bossHudVal"></div>
+  </div>
+
+  <!-- BARRA DE HABILIDADES ATIVAS -->
+  <div id="abilBar"></div>
+
+  <!-- HUD BOTTOM -->
+  <div id="hudBottom">
+    <div class="stat-pill" title="Dano por projétil"><span class="pill-icon">⚔</span><span class="pill-label">DANO</span><span class="pill-val" id="statDmg">10</span></div>
+    <div class="stat-pill" title="Velocidade de movimento"><span class="pill-icon">🏃</span><span class="pill-label">VELOC</span><span class="pill-val" id="statSpd">5</span></div>
+    <div class="stat-pill" title="Chance de acerto crítico"><span class="pill-icon">🎯</span><span class="pill-label">CRIT</span><span class="pill-val" id="statCrit">5%</span></div>
+    <div class="stat-pill stat-wave" title="Fase atual"><span class="pill-icon">🌊</span><span class="pill-label">FASE</span><span class="pill-val" id="statWave">1</span></div>
+    <div class="stat-pill" title="Inimigos eliminados"><span class="pill-icon">☠</span><span class="pill-label">KILLS</span><span class="pill-val" id="statKills">0</span></div>
+    <button class="hud-icon-btn" id="btnShop" onclick="openShop()" title="Abrir Loja">🛒</button>
+    <button id="btnMute" onclick="toggleMute()" title="Mutar/Desmutar som">🔊</button>
+    <button id="btnPause" title="Pausar jogo">⏸ PAUSE</button>
+  </div>
+
+  <!-- JOYSTICK MOVIMENTO (esquerdo) -->
+  <div id="joystickZone"><div id="joystickBase"><div id="joystickKnob"></div></div></div>
+
+  <!-- ANALÓGICO DE TIRO (direito) -->
+  <div id="shootJoyZone"><div id="shootJoyBase"><div id="shootJoyKnob"></div></div></div>
+
+  <!-- DASH -->
+  <div id="dashBtn">DASH</div>
+
+  <!-- NOTIFICATIONS -->
+  <div id="lootNotif"></div>
+  <div id="waveAnnounce"></div>
+  <div id="offlineReward">
+    <h3>⚡ OFFLINE REWARD</h3>
+    <p id="offlineMsg">Você ganhou 0 moedas!</p>
+    <button class="btn-secondary" style="margin-top:8px;pointer-events:all" onclick="document.getElementById('offlineReward').style.display='none'">COLETAR</button>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="overlay active" id="startScreen">
+    <div class="logo">NEON RUSH<br>INCREMENTAL</div>
+    <div class="logo-sub">Arena Survival v2.0</div>
+    <div class="start-stats" id="startStats"></div>
+    <div class="controls-guide">
+      <div class="ctrl-row"><span class="ctrl-key">WASD / ←→↑↓</span><span class="ctrl-desc">Mover</span></div>
+      <div class="ctrl-row"><span class="ctrl-key">DASH</span><span class="ctrl-desc">Esquivar (mobile: botão)</span></div>
+      <div class="ctrl-row"><span class="ctrl-key">Q</span><span class="ctrl-desc">Tempo Lento (se comprado)</span></div>
+      <div class="ctrl-row"><span class="ctrl-key">🛒 LOJA</span><span class="ctrl-desc">Comprar melhorias com moedas</span></div>
+    </div>
+    <button class="btn-primary" id="btnStart">▶ INICIAR PARTIDA</button>
+    <div class="start-secondary-btns">
+      <button class="btn-secondary" id="btnRanking">🏆 RANKING</button>
+      <button class="btn-secondary btn-shop-start" onclick="openShop()">🛒 LOJA</button>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">Sair da conta</button>
+  </div>
+
+  <!-- UPGRADE SCREEN -->
+  <div class="overlay" id="upgradeScreen">
+    <div class="title">⬆ LEVEL UP!</div>
+    <div class="level-badge" id="upgradeLvlBadge">NÍVEL 2</div>
+    <div class="upgrade-cards" id="upgradeCards"></div>
+  </div>
+
+  <!-- BOSS DEFEAT SCREEN -->
+  <div class="overlay" id="bossDefeatScreen">
+    <div class="boss-defeat-title" id="bossDefeatTitle">BOSS DERROTADO!</div>
+    <div class="boss-defeat-sub" id="bossDefeatSub">Parabéns! Avance para a próxima fase.</div>
+    <div class="boss-defeat-reward" id="bossDefeatReward">+500 XP  +50 COINS</div>
+    <button class="btn-primary" style="margin-top:22px" id="btnNextPhase">⚡ PRÓXIMA FASE</button>
+  </div>
+
+  <!-- SHOP SCREEN -->
+  <div class="overlay" id="shopScreen">
+    <div class="shop-header">
+      <div class="shop-title">🛒 LOJA</div>
+      <div class="shop-coins">💰 <span id="shopCoinsDisplay">0</span></div>
+      <button class="shop-close-btn" onclick="closeShop()">✕</button>
+    </div>
+    <div class="shop-grid" id="shopGrid"></div>
+  </div>
+
+  <!-- PAUSE SCREEN -->
+  <div class="overlay" id="pauseScreen">
+    <h2>⏸ PAUSE</h2>
+    <button class="btn-primary" id="btnResume">▶ CONTINUAR</button>
+    <button class="btn-secondary" id="btnRestartPause" style="margin-top:10px">↺ REINICIAR</button>
+    <button class="btn-secondary" style="margin-top:8px" onclick="openShop()">🛒 LOJA</button>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div class="overlay" id="gameOverScreen">
+    <h2>GAME OVER</h2>
+    <div class="go-stats" id="goStats"></div>
+    <button class="btn-primary" id="btnRestart">↺ JOGAR NOVAMENTE</button>
+    <button class="btn-secondary" id="btnGoRanking" style="margin-top:9px">🏆 VER RANKING</button>
+  </div>
+
+  <!-- RANKING SCREEN -->
+  <div class="overlay" id="rankingScreen">
+    <h2>🏆 RANKING</h2>
+    <div class="ranking-list" id="rankingList"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;justify-content:center">
+      <button class="btn-secondary" id="btnBackRanking">← VOLTAR</button>
+      <button class="btn-secondary" style="border-color:rgba(255,0,153,0.4);color:rgba(255,0,153,0.8)" onclick="downloadRankingPDF()">📄 PDF</button>
+    </div>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
