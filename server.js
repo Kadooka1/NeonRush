@@ -424,12 +424,24 @@ app.post('/api/admin/news-sources/refresh', adminAuth, async (req, res) => {
   res.json({ ok: false, message: 'Nenhuma fonte conseguiu extrair notícias', diagnostics: results });
 });
 
-// GET /api/admin/users — lista usuários (apenas para debug)
-app.get('/api/admin/users', (req, res) => {
+// GET /api/admin/users — lista usuários
+app.get('/api/admin/users', adminAuth, (req, res) => {
   const users = db.prepare(
-    'SELECT id, username, email, created_at FROM users ORDER BY created_at DESC'
+    'SELECT id, username, email, is_admin, created_at FROM users ORDER BY created_at DESC'
   ).all();
   res.json(users);
+});
+
+// DELETE /api/admin/users/:id — remove usuário
+app.delete('/api/admin/users/:id', adminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  const user = db.prepare('SELECT id, is_admin FROM users WHERE id = ?').get(id);
+  if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+  if (user.is_admin) return res.status(403).json({ error: 'Não é possível remover o admin' });
+  db.prepare('DELETE FROM scores WHERE user_id = ?').run(id);
+  db.prepare('DELETE FROM purchases WHERE user_id = ?').run(id);
+  db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  res.json({ ok: true });
 });
 
 // ════════════════════════════════════════════════════════════

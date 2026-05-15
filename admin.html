@@ -158,6 +158,14 @@
     </div>
   </div>
 
+  <!-- USUÁRIOS -->
+  <div class="card">
+    <div class="card-title">👥 USUÁRIOS CADASTRADOS</div>
+    <div class="source-list" id="userList">
+      <div class="source-empty">Carregando...</div>
+    </div>
+  </div>
+
   <div class="card" style="padding:16px">
     <button class="btn-logout" onclick="doLogout()">Sair da conta admin</button>
   </div>
@@ -165,7 +173,7 @@
 </div>
 
 <script>
-const API = '';
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3001' : '';
 let token = localStorage.getItem('admin_token');
 
 if (token) showAdmin();
@@ -198,6 +206,7 @@ function showAdmin() {
   document.getElementById('adminSection').style.display = 'block';
   loadSources();
   loadNewsPreview();
+  loadUsers();
 }
 
 function doLogout() {
@@ -295,6 +304,40 @@ async function loadNewsPreview(news) {
     return;
   }
   preview.innerHTML = news.map(n => `<div class="news-item">${n.title}</div>`).join('');
+}
+
+async function loadUsers() {
+  const list = document.getElementById('userList');
+  try {
+    const r = await fetch(API + '/api/admin/users', { headers: { Authorization: 'Bearer ' + token } });
+    const rows = await r.json();
+    if (!rows.length) {
+      list.innerHTML = '<div class="source-empty">Nenhum usuário cadastrado</div>';
+      return;
+    }
+    list.innerHTML = rows.map(u => `
+      <div class="source-item">
+        <div class="source-info">
+          <div class="source-name">${u.username} ${u.is_admin ? '👑' : ''}</div>
+          <div class="source-url">${u.email} · ${u.created_at}</div>
+        </div>
+        ${!u.is_admin ? `<button class="btn-danger" onclick="deleteUser(${u.id}, '${u.username}')">✕ REMOVER</button>` : ''}
+      </div>
+    `).join('');
+  } catch {
+    list.innerHTML = '<div class="source-empty">Erro ao carregar usuários</div>';
+  }
+}
+
+async function deleteUser(id, username) {
+  if (!confirm('Remover o usuário "' + username + '"?')) return;
+  const r = await fetch(API + '/api/admin/users/' + id, {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer ' + token }
+  });
+  const data = await r.json();
+  if (!r.ok) return alert(data.error);
+  loadUsers();
 }
 
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
